@@ -1,62 +1,76 @@
-"use client"; // Convert to Client Component to use state
+"use client";
 
-import * as React from "react"; // Import React for useState
-import { DatePicker } from "@/components/date-picker"; // Import the DatePicker component
-import { Button } from "@/components/ui/button"; // Import Button component
+import * as React from "react";
+import { DatePicker } from "@/components/date-picker";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"; // Import Card components
+} from "@/components/ui/card";
+import { fetchAvailability, AvailabilityResponse, CourtAvailability } from "@/lib/api"; // Import fetch function and types
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
 
 // Helper function to format date safely, handling undefined
 const formatDate = (date: Date | undefined): string => {
-  if (!date) {
-    return "..."; // Return placeholder if date is undefined
-  }
+  if (!date) return "...";
   try {
     return date.toLocaleDateString('es-AR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
   } catch (error) {
     console.error("Error formatting date:", error);
-    return "Fecha inválida"; // Fallback for invalid dates
+    return "Fecha inválida";
   }
 };
 
-// Define available time slots
-const availableTimes = [
-  "14:00",
-  "15:30",
-  "17:00",
-  "18:30",
-  "20:00",
-  "21:30",
-  // Note: 23:00 is the end time, not a start time for a 1.5hr slot starting before 23:00
-];
+// Placeholder Club ID - Replace with dynamic ID later
+const PLACEHOLDER_CLUB_ID = "67f31e8aff2d2580fbd780c3"; // Replaced with actual Club ID
 
 export default function BookingsPage() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date()); // Initialize date state
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [selectedCourtId, setSelectedCourtId] = React.useState<string | null>(null); // State for selected court
   const [selectedTime, setSelectedTime] = React.useState<string | null>(null); // State for selected time
 
-  // TODO: Fetch actual availability based on selected date from backend
-  const isTimeAvailable = (time: string) => {
-    // Placeholder logic: Assume all times are available for now
-    return true;
-  };
+  const [availabilityData, setAvailabilityData] = React.useState<AvailabilityResponse | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleTimeSelect = (time: string) => {
-    if (isTimeAvailable(time)) {
-      setSelectedTime(time);
+  // Fetch availability when date changes
+  React.useEffect(() => {
+    if (!date || !PLACEHOLDER_CLUB_ID) {
+      setAvailabilityData(null); // Clear data if date or clubId is missing
+      return;
     }
-    // Optionally handle unavailable time clicks (e.g., show a message)
-  };
 
+    const loadAvailability = async () => {
+      setIsLoading(true);
+      setError(null);
+      setSelectedTime(null); // Reset selected time when date changes
+      setSelectedCourtId(null); // Reset selected court
+      setAvailabilityData(null); // Clear previous data
+
+      try {
+        // TODO: Pass access token when auth is implemented
+        const data = await fetchAvailability(PLACEHOLDER_CLUB_ID, date);
+        setAvailabilityData(data);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || "Error al cargar la disponibilidad.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAvailability();
+  }, [date]); // Dependency array includes 'date'
+
+  const handleTimeSelect = (courtId: string, time: string) => {
+    setSelectedCourtId(courtId);
+    setSelectedTime(time);
+  };
 
   return (
     <section className="container px-4 py-6">
@@ -94,36 +108,59 @@ export default function BookingsPage() {
                 Disponibilidad para {formatDate(date)}
               </CardTitle>
               <CardDescription>
-                Selecciona un horario disponible para reservar.
+                Selecciona una cancha y horario disponible.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Availability Grid */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {availableTimes.map((time) => {
-                  const available = isTimeAvailable(time); // Check availability (placeholder)
-                  return (
-                    <Button
-                      key={time}
-                      variant={selectedTime === time ? "default" : "outline"} // Style based on selection
-                      disabled={!available} // Disable if not available (using placeholder logic)
-                      onClick={() => handleTimeSelect(time)}
-                      className="w-full justify-center" // Ensure button text is centered
-                    >
-                      {time}
-                    </Button>
-                  );
-                })}
-              </div>
-              {/* Display selected time */}
-              {selectedTime && (
+              {isLoading && (
+                <div className="space-y-4">
+                  <Skeleton className="h-8 w-1/2" />
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+                  </div>
+                </div>
+              )}
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+              {!isLoading && !error && availabilityData && (
+                <div className="space-y-6">
+                  {availabilityData.courts.length === 0 ? (
+                     <p className="text-sm text-muted-foreground">No hay canchas disponibles para esta fecha.</p>
+                  ) : (
+                    availabilityData.courts.map((court) => (
+                      <div key={court.courtId}>
+                        <h3 className="mb-2 font-semibold">{court.courtName} ({court.courtType})</h3>
+                        {court.availableSlots.length === 0 ? (
+                           <p className="text-sm text-muted-foreground">No hay horarios disponibles para esta cancha.</p>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                            {court.availableSlots.map((time) => (
+                              <Button
+                                key={time}
+                                variant={selectedCourtId === court.courtId && selectedTime === time ? "default" : "outline"}
+                                onClick={() => handleTimeSelect(court.courtId, time)}
+                                className="w-full justify-center"
+                              >
+                                {time}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+              {/* Display selected time and court */}
+              {selectedCourtId && selectedTime && (
                  <p className="mt-4 text-sm text-muted-foreground">
-                    Horario seleccionado: {selectedTime}
+                    Horario seleccionado: {selectedTime} en cancha {availabilityData?.courts.find(c => c.courtId === selectedCourtId)?.courtName}
                  </p>
               )}
-               {/* Placeholder for booking button */}
-               {selectedTime && (
-                  <Button className="mt-6 w-full">Confirmar Reserva para {selectedTime}</Button>
+               {/* Booking button */}
+               {selectedCourtId && selectedTime && (
+                  <Button className="mt-6 w-full">Confirmar Reserva</Button>
                )}
             </CardContent>
           </Card>

@@ -2,7 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { passportJwtSecret } from 'jwks-rsa'; // Library to fetch JWKS keys
+import { passportJwtSecret } from 'jwks-rsa';
+import { JwtPayload } from '../interfaces/jwt-payload.interface'; // Import the payload interface
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -21,20 +22,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // This method is called after the token is successfully validated (signature, expiration, audience, issuer)
-  // The 'payload' argument contains the decoded token claims.
-  validate(payload: unknown): unknown {
-    // Here, the token is already verified by passport-jwt using JWKS.
-    // The payload contains the decoded token information (like sub, email, permissions, etc.).
-    // We can simply return the payload, which will be attached to the request object as request.user.
-    // Optionally, you could fetch user details from your DB based on payload.sub (Auth0 user ID)
-    // if you need to attach your internal user object to the request.
-    // For now, returning the raw payload is sufficient for authorization checks based on token claims.
-
-    if (!payload) {
-        throw new UnauthorizedException('Invalid token payload');
+  validate(payload: JwtPayload): JwtPayload {
+    // The token signature and claims (aud, iss, exp) are already verified by passport-jwt.
+    // We receive the validated payload here.
+    // We simply return it to be attached to req.user.
+    // Ensure the payload has the expected structure (at least 'sub').
+    if (!payload || !payload.sub) {
+      throw new UnauthorizedException('Invalid token payload: missing sub claim');
     }
-    // console.log('JWT Payload:', payload); // For debugging
-    return payload; // The payload will be attached to req.user
+    // console.log('Validated JWT Payload:', payload); // For debugging
+    return payload; // Attach the validated payload to req.user
   }
 }

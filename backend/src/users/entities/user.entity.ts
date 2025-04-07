@@ -56,4 +56,4 @@ export class User {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 // Add index for email for faster lookups
-UserSchema.index({ email: 1 });
+// UserSchema.index({ email: 1 }); // Index is created by @Prop({ unique: true })

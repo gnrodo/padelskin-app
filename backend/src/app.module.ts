@@ -6,6 +6,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { ClubsModule } from './clubs/clubs.module';
+import { CourtsModule } from './courts/courts.module';
+import { SchedulesModule } from './schedules/schedules.module';
+import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
@@ -23,6 +27,10 @@ import { AuthModule } from './auth/auth.module';
     UsersModule,
     // JwtModule configuration removed
     AuthModule,
+    ClubsModule,
+    CourtsModule,
+    SchedulesModule,
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

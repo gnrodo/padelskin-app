@@ -12,6 +12,13 @@ async function bootstrap() {
     // forbidNonWhitelisted: true, // Optional: Throw error if non-whitelisted properties are present
   }));
 
+  // Enable CORS for the frontend origin
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Allow frontend URL
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true, // Allow cookies/authorization headers
+  });
+
   // Define the port, defaulting to 3001 to avoid conflict with frontend (usually 3000)
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
