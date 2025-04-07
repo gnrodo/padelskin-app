@@ -74,3 +74,67 @@ export async function fetchAvailability(
     throw error;
   }
 }
+
+
+// --- Booking Functions ---
+
+// Interface for the data needed to create a booking
+// Matches backend CreateBookingDto structure (excluding fields set by backend like user, endTime, status)
+export interface CreateBookingPayload {
+  club: string;
+  court: string;
+  startTime: string; // ISO String format
+  // Optional fields from frontend if needed
+  matchType?: string;
+  gameType?: string;
+  players?: string[];
+  isPrivate?: boolean;
+  needsPlayers?: boolean;
+}
+
+// TODO: Define proper type for the successful booking response from backend
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type BookingResponse = any;
+
+export async function createBooking(
+  bookingData: CreateBookingPayload,
+  // TODO: Add accessToken parameter later
+  // accessToken: string | undefined
+): Promise<BookingResponse> {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (!apiBaseUrl) {
+    throw new Error("API base URL is not configured.");
+  }
+
+  const url = `${apiBaseUrl}/bookings`;
+
+  // TODO: Add Authorization header when auth is implemented
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    // Authorization: `Bearer ${accessToken}`,
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(bookingData),
+    });
+
+    if (!response.ok) {
+      let errorDetails = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
+      } catch (e) { /* Ignore */ }
+      throw new Error(errorDetails);
+    }
+
+    const data: BookingResponse = await response.json();
+    return data;
+
+  } catch (error) {
+    console.error("Failed to create booking:", error);
+    throw error;
+  }
+}

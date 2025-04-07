@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-// import { UserProvider } from '@auth0/nextjs-auth0'; // Auth0 UserProvider removed
+import { AuthProvider } from "@/lib/auth/auth-provider"; // Usar nuestro provider personalizado
 import { ThemeProvider } from "@/components/theme-provider";
-import { Header } from "@/components/layout/header"; // Import Header
+import { Header } from "@/components/layout/header";
+import { Toaster } from "@/components/ui/sonner"; // Import Toaster from sonner
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,20 +29,23 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-200 dark:bg-slate-800`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark" // Set default theme to dark
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="relative flex min-h-screen flex-col bg-background">
-            <Header />
-            <main className="flex-1">{children}</main>
-            {/* Footer Placeholder could go here */}
-          </div>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark" // Set default theme to dark
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="relative flex min-h-screen flex-col bg-background">
+              <Header />
+              <main className="flex-1">{children}</main>
+              {/* Footer Placeholder could go here */}
+            </div>
+          </ThemeProvider>
+          <Toaster richColors /> {/* Add Toaster component */}
+        </AuthProvider>
       </body>
     </html>
   );
