@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateCourtDto } from './dto/create-court.dto';
@@ -8,7 +12,9 @@ import { Court, CourtDocument } from './entities/court.entity';
 
 @Injectable()
 export class CourtsService {
-  constructor(@InjectModel(Court.name) private courtModel: Model<CourtDocument>) {}
+  constructor(
+    @InjectModel(Court.name) private courtModel: Model<CourtDocument>,
+  ) {}
   // TODO: Inject ClubsService if needed
 
   async create(createCourtDto: CreateCourtDto): Promise<Court> {
@@ -31,13 +37,17 @@ export class CourtsService {
     return createdCourt.save();
   }
 
-  async findAll(clubId?: string): Promise<CourtDocument[]> { // Return CourtDocument
+  async findAll(clubId?: string): Promise<CourtDocument[]> {
+    // Return CourtDocument
     const filter = clubId ? { club: clubId } : {};
     return this.courtModel.find(filter).populate('club', 'name slug').exec(); // Populate basic club info
   }
 
   async findOne(id: string): Promise<Court> {
-    const court = await this.courtModel.findById(id).populate('club', 'name slug').exec();
+    const court = await this.courtModel
+      .findById(id)
+      .populate('club', 'name slug')
+      .exec();
     if (!court) {
       throw new NotFoundException(`Court with ID "${id}" not found`);
     }
@@ -49,7 +59,9 @@ export class CourtsService {
 
     // Prevent changing the club via this method for simplicity
     if (updateCourtDto.club) {
-        throw new BadRequestException('Changing the club of a court is not allowed via update.');
+      throw new BadRequestException(
+        'Changing the club of a court is not allowed via update.',
+      );
     }
 
     const updatedCourt = await this.courtModel

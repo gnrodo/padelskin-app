@@ -13,12 +13,14 @@ import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ // Configure ConfigModule
+    ConfigModule.forRoot({
+      // Configure ConfigModule
       isGlobal: true, // Make ConfigService available globally
     }),
-    MongooseModule.forRootAsync({ // Configure MongooseModule asynchronously
+    MongooseModule.forRootAsync({
+      // Configure MongooseModule asynchronously
       imports: [ConfigModule], // Import ConfigModule to use ConfigService
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('DATABASE_URL'), // Get URI from .env
         // Add other Mongoose options here if needed
       }),

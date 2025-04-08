@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { fetchAvailability, createBooking, AvailabilityResponse, CourtAvailability } from "@/lib/api"; // Import fetch and create functions
+import { fetchAvailability, createBooking, AvailabilityResponse } from "@/lib/api"; // Import fetch and create functions
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner"; // Import toast from sonner
 
@@ -56,9 +56,9 @@ export default function BookingsPage() {
       try {
         const data = await fetchAvailability(PLACEHOLDER_CLUB_ID, currentDate);
         setAvailabilityData(data);
-      } catch (err: any) {
+      } catch (err: Error | unknown) {
         console.error(err);
-        setError(err.message || "Error al cargar la disponibilidad.");
+        setError(err instanceof Error ? err.message : "Error al cargar la disponibilidad.");
       } finally {
         setIsLoading(false);
       }
@@ -110,9 +110,9 @@ export default function BookingsPage() {
       // Reload availability after successful booking
       loadAvailability(date);
 
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       console.error("Booking failed:", err);
-      const errorMsg = err.message || "Error al crear la reserva.";
+      const errorMsg = err instanceof Error ? err.message : "Error al crear la reserva.";
       setBookingError(errorMsg);
       toast.error(`Error en Reserva: ${errorMsg}`); // Use sonner toast
     } finally {

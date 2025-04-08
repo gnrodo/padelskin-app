@@ -5,7 +5,8 @@ import { UsersController } from './users.controller';
 import { User, UserSchema } from './entities/user.entity'; // Import User and UserSchema
 
 @Module({
-  imports: [ // Add imports array
+  imports: [
+    // Add imports array
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), // Register User schema
   ],
   controllers: [UsersController],

@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseIntPipe, DefaultValuePipe, ValidationPipe } from '@nestjs/common'; // Import Query, ParseIntPipe, DefaultValuePipe, ValidationPipe
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common'; // Import Query
 import { AuthGuard } from '@nestjs/passport'; // Import AuthGuard
 import { ClubsService } from './clubs.service';
 import { CreateClubDto } from './dto/create-club.dto';
@@ -43,8 +53,8 @@ export class ClubsController {
   ) {
     // TODO: Add validation for the date format if not handled by global pipe/DTO
     if (!date) {
-        // Handle missing date query param - perhaps default to today or throw error
-        // For now, let the service handle it or throw implicitly
+      // Handle missing date query param - perhaps default to today or throw error
+      // For now, let the service handle it or throw implicitly
     }
     // Placeholder: Call a new service method to calculate availability
     return this.clubsService.getAvailability(clubId, date);

@@ -59,7 +59,7 @@ export async function fetchAvailability(
       try {
         const errorData = await response.json();
         errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
-      } catch (e) {
+      } catch {
         // Ignore if response body is not JSON or empty
       }
       throw new Error(errorDetails);
@@ -126,7 +126,7 @@ export async function createBooking(
       try {
         const errorData = await response.json();
         errorDetails += ` - ${errorData.message || JSON.stringify(errorData)}`;
-      } catch (e) { /* Ignore */ }
+      } catch { /* Ignore */ }
       throw new Error(errorDetails);
     }
 

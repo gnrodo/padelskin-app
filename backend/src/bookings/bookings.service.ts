@@ -1,9 +1,18 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
-import { Booking, BookingDocument, BookingStatus } from './entities/booking.entity';
+import {
+  Booking,
+  BookingDocument,
+  BookingStatus,
+} from './entities/booking.entity';
 // TODO: Import SchedulesService, CourtsService, UsersService for validation/calculation
 
 @Injectable()
@@ -13,7 +22,10 @@ export class BookingsService {
     // TODO: Inject other services: SchedulesService, CourtsService, UsersService
   ) {}
 
-  async create(createBookingDto: CreateBookingDto, userId: string): Promise<Booking> {
+  async create(
+    createBookingDto: CreateBookingDto,
+    userId: string,
+  ): Promise<Booking> {
     // TODO: Validate club and court existence using their respective services
 
     // --- Calculate endTime based on startTime and schedule ---
@@ -27,12 +39,14 @@ export class BookingsService {
 
     // --- Check for booking conflicts ---
     const conflictingBooking = await this.findBookingConflict(
-        createBookingDto.court,
-        startTime,
-        endTime
+      createBookingDto.court,
+      startTime,
+      endTime,
     );
     if (conflictingBooking) {
-        throw new ConflictException(`Court is already booked from ${conflictingBooking.startTime.toLocaleTimeString()} to ${conflictingBooking.endTime.toLocaleTimeString()}`);
+      throw new ConflictException(
+        `Court is already booked from ${conflictingBooking.startTime.toLocaleTimeString()} to ${conflictingBooking.endTime.toLocaleTimeString()}`,
+      );
     }
 
     // TODO: Validate if the startTime aligns with the club's schedule (open hours, slot start times)
@@ -53,48 +67,59 @@ export class BookingsService {
   }
 
   async findAll(
-      clubId?: string,
-      courtId?: string,
-      userId?: string,
-      date?: string // e.g., "YYYY-MM-DD"
-    ): Promise<Booking[]> {
-    const filter: any = {};
+    clubId?: string,
+    courtId?: string,
+    userId?: string,
+    date?: string, // e.g., "YYYY-MM-DD"
+  ): Promise<Booking[]> {
+    const filter: Record<string, unknown> = {};
     if (clubId) filter.club = new Types.ObjectId(clubId);
     if (courtId) filter.court = new Types.ObjectId(courtId);
     if (userId) filter.user = new Types.ObjectId(userId);
     if (date) {
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
-        filter.startTime = { $gte: startOfDay, $lt: endOfDay };
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      filter.startTime = { $gte: startOfDay, $lt: endOfDay };
     }
 
-    return this.bookingModel.find(filter)
-        .populate('user', 'name email')
-        .populate('club', 'name slug')
-        .populate('court', 'name type')
-        .sort({ startTime: 1 }) // Sort by start time
-        .exec();
+    return this.bookingModel
+      .find(filter)
+      .populate('user', 'name email')
+      .populate('club', 'name slug')
+      .populate('court', 'name type')
+      .sort({ startTime: 1 }) // Sort by start time
+      .exec();
   }
 
   async findOne(id: string): Promise<Booking> {
-    const booking = await this.bookingModel.findById(id)
-        .populate('user', 'name email')
-        .populate('club', 'name slug')
-        .populate('court', 'name type')
-        .populate('players', 'name email') // Populate players details
-        .exec();
+    const booking = await this.bookingModel
+      .findById(id)
+      .populate('user', 'name email')
+      .populate('club', 'name slug')
+      .populate('court', 'name type')
+      .populate('players', 'name email') // Populate players details
+      .exec();
     if (!booking) {
       throw new NotFoundException(`Booking with ID "${id}" not found`);
     }
     return booking;
   }
 
-  async update(id: string, updateBookingDto: UpdateBookingDto): Promise<Booking> {
+  async update(
+    id: string,
+    updateBookingDto: UpdateBookingDto,
+  ): Promise<Booking> {
     // Basic update, more complex logic needed for status changes, adding/removing players etc.
-    if (updateBookingDto.club || updateBookingDto.court || updateBookingDto.startTime) {
-        throw new BadRequestException('Cannot update club, court, or startTime via this method.');
+    if (
+      updateBookingDto.club ||
+      updateBookingDto.court ||
+      updateBookingDto.startTime
+    ) {
+      throw new BadRequestException(
+        'Cannot update club, court, or startTime via this method.',
+      );
     }
 
     const updatedBooking = await this.bookingModel
@@ -121,34 +146,46 @@ export class BookingsService {
   }
 
   // Helper to check for overlapping bookings
-  private async findBookingConflict(courtId: string, startTime: Date, endTime: Date): Promise<BookingDocument | null> {
-    return this.bookingModel.findOne({
+  private async findBookingConflict(
+    courtId: string,
+    startTime: Date,
+    endTime: Date,
+  ): Promise<BookingDocument | null> {
+    return this.bookingModel
+      .findOne({
         court: new Types.ObjectId(courtId),
         status: { $ne: BookingStatus.CANCELLED_BY_ADMIN }, // Ignore cancelled bookings for conflicts
         $or: [
-            // New booking starts during an existing booking
-            { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
-        ]
-    }).exec();
+          // New booking starts during an existing booking
+          { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
+        ],
+      })
+      .exec();
   }
 
   // --- Helper for Availability ---
-  async findBookingsForCourtsOnDate(courtIds: string[], dateString: string): Promise<BookingDocument[]> {
+  async findBookingsForCourtsOnDate(
+    courtIds: string[],
+    dateString: string,
+  ): Promise<BookingDocument[]> {
     const startOfDay = new Date(dateString + 'T00:00:00.000Z');
     const endOfDay = new Date(dateString + 'T23:59:59.999Z');
 
-    return this.bookingModel.find({
-      court: { $in: courtIds.map(id => new Types.ObjectId(id)) }, // Find bookings for the specified courts
-      status: { $ne: BookingStatus.CANCELLED_BY_ADMIN }, // Ignore cancelled bookings
-      // Find bookings that overlap with the target date
-      $or: [
-        { startTime: { $gte: startOfDay, $lt: endOfDay } }, // Starts within the day
-        { endTime: { $gt: startOfDay, $lte: endOfDay } }, // Ends within the day
-        { startTime: { $lt: startOfDay }, endTime: { $gt: endOfDay } } // Spans the entire day
-      ]
-    })
-    // Optionally populate necessary fields if needed later, but maybe not for availability check
-    // .populate('court')
-    .exec();
+    return (
+      this.bookingModel
+        .find({
+          court: { $in: courtIds.map((id) => new Types.ObjectId(id)) }, // Find bookings for the specified courts
+          status: { $ne: BookingStatus.CANCELLED_BY_ADMIN }, // Ignore cancelled bookings
+          // Find bookings that overlap with the target date
+          $or: [
+            { startTime: { $gte: startOfDay, $lt: endOfDay } }, // Starts within the day
+            { endTime: { $gt: startOfDay, $lte: endOfDay } }, // Ends within the day
+            { startTime: { $lt: startOfDay }, endTime: { $gt: endOfDay } }, // Spans the entire day
+          ],
+        })
+        // Optionally populate necessary fields if needed later, but maybe not for availability check
+        // .populate('court')
+        .exec()
+    );
   }
 }

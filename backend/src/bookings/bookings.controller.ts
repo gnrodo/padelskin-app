@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common'; // Import UseGuards, Req, Query
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+  Query,
+} from '@nestjs/common'; // Import UseGuards, Req, Query
 import { AuthGuard } from '@nestjs/passport'; // Import AuthGuard
 import { Request } from 'express';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface'; // Import JwtPayload
@@ -19,7 +30,9 @@ export class BookingsController {
     const userId = (req.user as JwtPayload)?.sub;
     if (!userId) {
       // This should technically not happen if AuthGuard is working, but good practice
-      throw new Error('User ID not found in request. Authentication might have failed.');
+      throw new Error(
+        'User ID not found in request. Authentication might have failed.',
+      );
     }
     return this.bookingsService.create(createBookingDto, userId);
   }

@@ -20,9 +20,9 @@ const defaultWeeklyHours = (): DailyHours[] => {
     hours.push({
       dayOfWeek: i,
       isOpen: true, // Default to open
-      openTime: "14:00",
-      closeTime: "23:00",
-      slotDurationMinutes: 90
+      openTime: '14:00',
+      closeTime: '23:00',
+      slotDurationMinutes: 90,
     });
   }
   return hours;
@@ -40,7 +40,8 @@ export class Schedule {
   club: Club; // Reference to the Club this schedule belongs to
 
   @Prop({
-    type: [ // Define structure for the array elements
+    type: [
+      // Define structure for the array elements
       raw({
         dayOfWeek: { type: Number, required: true, min: 0, max: 6 },
         isOpen: { type: Boolean, required: true, default: true },

@@ -6,11 +6,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // Strip properties that do not have any decorators
-    transform: true, // Automatically transform payloads to DTO instances
-    // forbidNonWhitelisted: true, // Optional: Throw error if non-whitelisted properties are present
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Strip properties that do not have any decorators
+      transform: true, // Automatically transform payloads to DTO instances
+      // forbidNonWhitelisted: true, // Optional: Throw error if non-whitelisted properties are present
+    }),
+  );
 
   // Enable CORS for the frontend origin
   app.enableCors({
@@ -24,4 +26,4 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`Backend application is running on: http://localhost:${port}`); // Log the port
 }
-bootstrap();
+void bootstrap();

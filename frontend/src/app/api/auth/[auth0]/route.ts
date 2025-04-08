@@ -99,10 +99,11 @@ export async function GET(
       { status: 400 }
     );
   }
-  catch (error: any) {
+  catch (error: Error | unknown) {
     console.error(`Error en ruta auth/${action}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Error interno de autenticación';
     return NextResponse.json(
-      { error: error.message || 'Error interno de autenticación' }, 
+      { error: errorMessage }, 
       { status: 500 }
     );
   }

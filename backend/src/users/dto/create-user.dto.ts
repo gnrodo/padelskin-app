@@ -19,7 +19,12 @@ export class CreateUserDto {
 
   @IsEmail()
   @IsNotEmpty()
-  @Transform(({ value }) => value.toLowerCase()) // Transform email to lowercase
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.toLowerCase();
+    }
+    return value as string;
+  }) // Transform email to lowercase
   email: string;
 
   @IsString()

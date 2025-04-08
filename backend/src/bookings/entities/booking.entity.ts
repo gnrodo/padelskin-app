@@ -29,13 +29,28 @@ export enum GameType {
 
 @Schema({ timestamps: true })
 export class Booking {
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true, index: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true,
+  })
   user: User; // User who made the booking
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Club', required: true, index: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Club',
+    required: true,
+    index: true,
+  })
   club: Club;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Court', required: true, index: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Court',
+    required: true,
+    index: true,
+  })
   court: Court;
 
   @Prop({ required: true, index: true })
@@ -44,7 +59,12 @@ export class Booking {
   @Prop({ required: true })
   endTime: Date; // End date and time of the booking
 
-  @Prop({ type: String, enum: BookingStatus, required: true, default: BookingStatus.PENDING_PAYMENT })
+  @Prop({
+    type: String,
+    enum: BookingStatus,
+    required: true,
+    default: BookingStatus.PENDING_PAYMENT,
+  })
   status: BookingStatus;
 
   @Prop({ type: Number }) // Store price in cents or smallest currency unit
@@ -57,7 +77,10 @@ export class Booking {
   @Prop({ type: String, enum: GameType, default: GameType.OPEN })
   gameType: GameType;
 
-  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
+  @Prop({
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  })
   players: Types.ObjectId[]; // Array of User IDs participating (including the booker initially)
 
   @Prop({ default: false })

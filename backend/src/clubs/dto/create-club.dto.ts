@@ -21,9 +21,15 @@ export class CreateClubDto {
   @IsNotEmpty()
   @MaxLength(100)
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'Slug can only contain lowercase letters, numbers, and hyphens, and cannot start or end with a hyphen.',
+    message:
+      'Slug can only contain lowercase letters, numbers, and hyphens, and cannot start or end with a hyphen.',
   })
-  @Transform(({ value }) => value.toLowerCase().trim())
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.toLowerCase().trim();
+    }
+    return value as string;
+  })
   slug: string;
 
   @IsString()

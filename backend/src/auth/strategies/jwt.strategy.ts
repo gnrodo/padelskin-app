@@ -28,7 +28,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // We simply return it to be attached to req.user.
     // Ensure the payload has the expected structure (at least 'sub').
     if (!payload || !payload.sub) {
-      throw new UnauthorizedException('Invalid token payload: missing sub claim');
+      throw new UnauthorizedException(
+        'Invalid token payload: missing sub claim',
+      );
     }
     // console.log('Validated JWT Payload:', payload); // For debugging
     return payload; // Attach the validated payload to req.user
