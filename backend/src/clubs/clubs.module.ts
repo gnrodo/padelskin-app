@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common'; // Combined imports
+import { Module } from '@nestjs/common'; // Combined imports
 import { MongooseModule } from '@nestjs/mongoose'; // Combined imports
 import { ClubsService } from './clubs.service';
 import { ClubsController } from './clubs.controller';
@@ -18,6 +18,6 @@ import { BookingsModule } from '../bookings/bookings.module'; // Import Bookings
   ],
   controllers: [ClubsController],
   providers: [ClubsService],
-  exports: [ClubsService] // Export ClubsService
+  exports: [ClubsService], // Export ClubsService
 })
 export class ClubsModule {}

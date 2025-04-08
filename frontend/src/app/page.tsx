@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
-import { Button, buttonVariants } from "@/components/ui/button"; // Import buttonVariants
+import { buttonVariants } from "@/components/ui/button"; // Import buttonVariants
 import { cn } from "@/lib/utils"; // Import cn utility
 import { LandingBackground } from "@/components/landing-background"; // Import the background component
 

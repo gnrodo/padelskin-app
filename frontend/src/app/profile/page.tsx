@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { user, isLoading, error, login, logout } = useAuth();
+  const { user, isLoading, login, logout } = useAuth();
 
   // Obtener iniciales del usuario para el avatar
   const getUserInitials = (): string => {
