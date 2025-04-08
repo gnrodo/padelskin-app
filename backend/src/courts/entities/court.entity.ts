@@ -21,7 +21,12 @@ export class Court {
   @Prop({ type: String, enum: CourtType, required: true })
   type: CourtType; // Type of court (indoor/outdoor, glass/wall)
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Club', required: true, index: true })
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Club',
+    required: true,
+    index: true,
+  })
   club: Club; // Reference to the Club this court belongs to
 
   @Prop({ default: true })

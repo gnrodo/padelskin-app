@@ -28,7 +28,7 @@ export class CreateClubDto {
     if (typeof value === 'string') {
       return value.toLowerCase().trim();
     }
-    return value;
+    return value as string;
   })
   slug: string;
 

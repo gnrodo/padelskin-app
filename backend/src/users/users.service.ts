@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -13,13 +17,17 @@ const SALT_ROUNDS = 10; // Standard salt rounds for bcrypt
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  async create(createUserDto: CreateUserDto): Promise<Omit<User, 'passwordHash'>> {
+  async create(
+    createUserDto: CreateUserDto,
+  ): Promise<Omit<User, 'passwordHash'>> {
     if (!createUserDto.password) {
       throw new BadRequestException('Password is required.');
     }
 
     // Check if email already exists
-    const existingUser = await this.userModel.findOne({ email: createUserDto.email.toLowerCase() }).exec();
+    const existingUser = await this.userModel
+      .findOne({ email: createUserDto.email.toLowerCase() })
+      .exec();
     if (existingUser) {
       throw new BadRequestException('Email already in use.');
     }
@@ -45,7 +53,10 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<Omit<User, 'passwordHash'>> {
-    const user = await this.userModel.findById(id).select('-passwordHash').exec();
+    const user = await this.userModel
+      .findById(id)
+      .select('-passwordHash')
+      .exec();
     if (!user) {
       throw new NotFoundException(`User with ID "${id}" not found`);
     }
@@ -57,12 +68,18 @@ export class UsersService {
     return this.userModel.findOne({ email: email.toLowerCase() }).exec();
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<Omit<User, 'passwordHash'>> {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<Omit<User, 'passwordHash'>> {
     const updatePayload: Partial<User> = {};
 
     // Hash password if provided
     if (updateUserDto.password) {
-      updatePayload.passwordHash = await bcrypt.hash(updateUserDto.password, SALT_ROUNDS);
+      updatePayload.passwordHash = await bcrypt.hash(
+        updateUserDto.password,
+        SALT_ROUNDS,
+      );
     }
 
     // Add other updatable fields from DTO to payload if they exist
@@ -85,11 +102,11 @@ export class UsersService {
     // Add other fields like reliabilityScore if they become updatable via DTO
 
     if (Object.keys(updatePayload).length === 0) {
-       // Avoid unnecessary database call if no fields are being updated
-       // Find the existing user to return it, excluding the hash
-       const existingUser = await this.findOne(id);
-       return existingUser;
-       // Or throw BadRequestException('No update fields provided.');
+      // Avoid unnecessary database call if no fields are being updated
+      // Find the existing user to return it, excluding the hash
+      const existingUser = await this.findOne(id);
+      return existingUser;
+      // Or throw BadRequestException('No update fields provided.');
     }
 
     // Perform the update with the constructed payload
