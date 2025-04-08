@@ -23,7 +23,7 @@ export class CreateUserDto {
     if (typeof value === 'string') {
       return value.toLowerCase();
     }
-    return value;
+    return value as string;
   }) // Transform email to lowercase
   email: string;
 

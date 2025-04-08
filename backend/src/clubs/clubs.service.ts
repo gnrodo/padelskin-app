@@ -2,11 +2,9 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
-  forwardRef,
-} from '@nestjs/common'; // Import Inject, forwardRef
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose'; // Import Types
+import { Model } from 'mongoose';
 import { CreateClubDto } from './dto/create-club.dto';
 import { UpdateClubDto } from './dto/update-club.dto';
 import { Club, ClubDocument } from './entities/club.entity';
@@ -105,7 +103,10 @@ export class ClubsService {
   }
 
   // --- Availability Logic ---
-  async getAvailability(clubId: string, dateString: string): Promise<{
+  async getAvailability(
+    clubId: string,
+    dateString: string,
+  ): Promise<{
     clubId: string;
     date: string;
     courts: {
@@ -123,9 +124,21 @@ export class ClubsService {
     const dayOfWeek = targetDate.getUTCDay();
 
     // 2. Get Club's Schedule
-    let schedule;
+    interface ScheduleData {
+      weeklyHours?: Array<{
+        dayOfWeek: number;
+        isOpen: boolean;
+        openTime: string;
+        closeTime: string;
+        slotDurationMinutes: number;
+      }>;
+    }
+
+    let schedule: ScheduleData;
     try {
-      schedule = await this.schedulesService.findOneByClub(clubId);
+      schedule = (await this.schedulesService.findOneByClub(
+        clubId,
+      )) as ScheduleData;
     } catch (error) {
       if (error instanceof NotFoundException) {
         console.warn(`Schedule not found for club ${clubId}`);
@@ -134,9 +147,8 @@ export class ClubsService {
       throw error;
     }
 
-    const dailySchedule = schedule.weeklyHours?.find(
-      (h) => h?.dayOfWeek === dayOfWeek,
-    );
+    const weeklyHours = schedule?.weeklyHours || [];
+    const dailySchedule = weeklyHours.find((h) => h?.dayOfWeek === dayOfWeek);
     if (
       !dailySchedule ||
       !dailySchedule.isOpen ||
@@ -174,14 +186,55 @@ export class ClubsService {
         // Check if b.court is populated and has _id, or if it's just an ObjectId
         const courtIdInBooking =
           b.court instanceof Model ? (b.court as CourtDocument)._id : b.court;
-        return courtIdInBooking ? courtIdInBooking.toString() === court._id.toString() : false; // Access _id safely
+
+        if (!courtIdInBooking) return false;
+
+        let bookingIdStr = '';
+        if (courtIdInBooking) {
+          if (
+            typeof courtIdInBooking === 'object' &&
+            '_id' in courtIdInBooking
+          ) {
+            bookingIdStr = courtIdInBooking._id.toString();
+          } else if (typeof courtIdInBooking.toString === 'function') {
+            try {
+              if (
+                typeof courtIdInBooking === 'object' &&
+                courtIdInBooking !== null
+              ) {
+                bookingIdStr = JSON.stringify(courtIdInBooking);
+              } else {
+                bookingIdStr = '';
+              }
+            } catch {
+              bookingIdStr = '';
+            }
+          }
+        }
+        const courtIdStr = court._id.toString();
+        return bookingIdStr === courtIdStr;
       });
+
+      const openTime =
+        dailySchedule && typeof dailySchedule.openTime === 'string'
+          ? dailySchedule.openTime
+          : '00:00';
+
+      const closeTime =
+        dailySchedule && typeof dailySchedule.closeTime === 'string'
+          ? dailySchedule.closeTime
+          : '23:59';
+
+      const slotDurationMinutes =
+        dailySchedule && typeof dailySchedule.slotDurationMinutes === 'number'
+          ? dailySchedule.slotDurationMinutes
+          : 60;
 
       const availableSlots = this.calculateAvailableSlots(
         targetDate,
-        dailySchedule.openTime,
-        dailySchedule.closeTime,
-        dailySchedule.slotDurationMinutes,
+        String(openTime),
+        String(closeTime),
+        Number(slotDurationMinutes),
         courtBookings, // Pass filtered bookings
       );
       return {
